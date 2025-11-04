@@ -33,7 +33,7 @@ namespace TelegramBot
                 cts.Token
                 );
 
-            var me = botClient.GetMeAsync().Result;
+            var me = botClient.GetMe().Result;
             Console.WriteLine($"Start listening for @{me.Username}");
 
             Console.WriteLine("Bot is up and running. Press any key to exit");

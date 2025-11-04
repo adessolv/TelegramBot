@@ -16,10 +16,14 @@ namespace TelegramBot
 
         // Constants for the menu
         private const string? StartCommand = "/start";
-
         private const string? HelpCommand = "/help";
         private const string? SetTargetCommand = "/settarget";
         private const string? UsageCommand = "/usage";
+
+        static string _welcomeText = "Welcome to the translation bot! 🤖\nTo set your target language enter /settarget: ";
+
+        static string _helpText =
+            "🗺️\nThis bot translates any text into carefully selected 12 languages.\nTo start, type /start.";
 
         public static async void InitializeHandlersAsync(string deeplKey)
         {
@@ -36,7 +40,7 @@ namespace TelegramBot
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             // Menu button
-            await botClient.SetMyCommandsAsync(new List<BotCommand>
+            await botClient.SetMyCommands(new List<BotCommand>
                 {
                     new BotCommand { Command = "/start", Description = "Start the bot" },
                     new BotCommand { Command = "/help", Description = "Get help" },
@@ -49,14 +53,14 @@ namespace TelegramBot
                 switch (update.Message.Text.ToLower())
                 {
                     case StartCommand:
-                        await botClient.SendTextMessageAsync(update.Message.Chat.Id,
-                        "Welcome to the translation bot! 🤖\nTo set your target language enter /settarget: ",
+                        await botClient.SendMessage(update.Message.Chat.Id,
+                        _welcomeText,
                         cancellationToken: cancellationToken);
                         break;
 
                     case HelpCommand:
-                        await botClient.SendTextMessageAsync(update.Message.Chat.Id,
-                        "🗺️\nThis bot translates any text into carefully selected 12 languages.\nTo start, type /start.",
+                        await botClient.SendMessage(update.Message.Chat.Id,
+                        _helpText,
                         cancellationToken: cancellationToken);
                         break;
 
@@ -76,7 +80,7 @@ namespace TelegramBot
                                 CreateLangButton("Lithuanian 🇱🇹", LanguageCode.Lithuanian),
                                 CreateLangButton("Polish 🇵🇱", LanguageCode.Polish)}
                     };
-                        await botClient.SendTextMessageAsync(update.Message.Chat.Id, "Select your target language:",
+                        await botClient.SendMessage(update.Message.Chat.Id, "Select your target language:",
                                                replyMarkup: new InlineKeyboardMarkup(languages),
                                                cancellationToken: cancellationToken);
                         break;
@@ -92,12 +96,12 @@ namespace TelegramBot
             }
             else if (update.Type == UpdateType.CallbackQuery)
             {
-                await botClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, cancellationToken: cancellationToken);
+                await botClient.AnswerCallbackQuery(update.CallbackQuery.Id, cancellationToken: cancellationToken);
                 _targetLang = update.CallbackQuery.Data;  // Set the target language
 
                 var languageName = GetLanguageName(_targetLang);
 
-                await botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                await botClient.SendMessage(update.CallbackQuery.Message.Chat.Id,
                     $"Target language set to {languageName}. You can now send text to translate.",
                     cancellationToken: cancellationToken);
             }
@@ -106,7 +110,7 @@ namespace TelegramBot
         private static async Task TranslateText(ITelegramBotClient botClient, long chatId, string text, CancellationToken cancellationToken)
         {
             var translation = await _translator.TranslateTextAsync(text, null, _targetLang);
-            await botClient.SendTextMessageAsync(chatId, translation.Text, cancellationToken: cancellationToken);
+            await botClient.SendMessage(chatId, translation.Text, cancellationToken: cancellationToken);
         }
 
         public static Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -135,11 +139,11 @@ namespace TelegramBot
                                       $"Character Usage: {usage.Character?.Count}\n" +
                                       $"Characters Remaining: {usage.Character?.Limit - usage.Character?.Count}";
 
-                await botClient.SendTextMessageAsync(chatId, usageMessage, cancellationToken: cancellationToken);
+                await botClient.SendMessage(chatId, usageMessage, cancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {
-                await botClient.SendTextMessageAsync(chatId, $"Error retrieving usage: {ex.Message}", cancellationToken: cancellationToken);
+                await botClient.SendMessage(chatId, $"Error retrieving usage: {ex.Message}", cancellationToken: cancellationToken);
             }
         }
     }
